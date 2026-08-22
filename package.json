@@ -1,0 +1,17 @@
+{
+  "name": "nexston-city-roleplay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NEXSTON CITY ROLEPLAY website with live SA-MP server status, accounts and whitelist applications.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.7.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  }
+}
