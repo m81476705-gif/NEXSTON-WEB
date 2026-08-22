@@ -46,4 +46,3 @@ async function loadMe(){
 async function logout(){await fetch("/api/logout",{method:"POST"});loadMe()}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 loadMe();
-    
