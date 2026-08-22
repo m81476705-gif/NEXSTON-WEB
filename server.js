@@ -9,6 +9,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SERVER_IP = process.env.SAMP_IP || "51.79.254.10";
 const SERVER_PORT = Number(process.env.SAMP_PORT || 7774);
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "SOMD234";
+
+// SA-MP hostnames/gamemodes often contain textdraw-style colour codes like
+// {FFFFFF} or embedded colour escapes. Strip them so the website shows clean text.
+function stripSampColors(str) {
+  if (!str) return str;
+  return str.replace(/\{[0-9A-Fa-f]{6}\}/g, "").trim();
+}
 
 const db = new Database(path.join(__dirname, "data.db"));
 db.pragma("journal_mode = WAL");
@@ -83,9 +91,9 @@ function sampQuery(ip, port, timeout = 2500) {
           return value;
         };
 
-        const hostname = readString();
-        const gamemode = readString();
-        const language = readString();
+        const hostname = stripSampColors(readString());
+        const gamemode = stripSampColors(readString());
+        const language = stripSampColors(readString());
 
         resolve({
           online: true,
@@ -161,6 +169,52 @@ app.post("/api/whitelist", (req, res) => {
     VALUES (?,?,?,?,?,?)
   `).run(req.session.userId, sampName.trim(), Number(age) || null, discord || "", experience || "", reason.trim());
   res.json({ ok: true });
+});
+
+// ---------- Admin panel ----------
+function requireAdmin(req, res, next) {
+  if (!req.session.isAdmin) return res.status(401).json({ error: "Not logged in as admin." });
+  next();
+}
+
+app.post("/api/admin/login", (req, res) => {
+  const { password } = req.body;
+  if (password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect admin password." });
+  req.session.isAdmin = true;
+  res.json({ ok: true });
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  req.session.isAdmin = false;
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/me", (req, res) => {
+  res.json({ isAdmin: Boolean(req.session.isAdmin) });
+});
+
+app.get("/api/admin/applications", requireAdmin, (req, res) => {
+  const rows = db.prepare(`
+    SELECT whitelist.id, whitelist.samp_name, whitelist.age, whitelist.discord,
+           whitelist.experience, whitelist.reason, whitelist.status, whitelist.created_at,
+           users.username, users.email
+    FROM whitelist
+    JOIN users ON users.id = whitelist.user_id
+    ORDER BY whitelist.id DESC
+  `).all();
+  res.json({ applications: rows });
+});
+
+app.post("/api/admin/applications/:id", requireAdmin, (req, res) => {
+  const { status } = req.body;
+  if (!["pending", "approved", "rejected"].includes(status))
+    return res.status(400).json({ error: "Invalid status." });
+  db.prepare("UPDATE whitelist SET status=? WHERE id=?").run(status, req.params.id);
+  res.json({ ok: true });
+});
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
 app.get("*", (req, res) => {
