@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Panel • NEXSTON CITY ROLEPLAY</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="/"><img src="/nexston-logo.png" alt="NEXSTON CITY ROLEPLAY Logo"></a>
+  <nav><a href="/">Back to site</a></nav>
+</header>
+
+<main>
+<section class="section" id="loginView">
+  <p class="eyebrow">STAFF ONLY</p><h2>Admin Login</h2>
+  <div class="card form-card">
+    <form id="adminLoginForm">
+      <input name="password" type="password" placeholder="Admin password" required>
+      <button class="btn">LOGIN</button>
+    </form>
+    <div id="adminLoginMsg"></div>
+  </div>
+</section>
+
+<section class="section hidden" id="dashView">
+  <p class="eyebrow">WHITELIST MANAGEMENT</p>
+  <div class="admin-head">
+    <h2>Applications</h2>
+    <button class="btn ghost" id="adminLogoutBtn">LOGOUT</button>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table id="appsTable">
+        <thead>
+          <tr>
+            <th>SAMP Name</th><th>User</th><th>Age</th><th>Discord</th>
+            <th>Experience</th><th>Reason</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="appsEmpty" class="muted hidden">No applications yet.</div>
+  </div>
+</section>
+</main>
+<footer>NEXSTON CITY ROLEPLAY • ADMIN PANEL</footer>
+<script src="/admin.js"></script>
+</body></html>
