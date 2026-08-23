@@ -22,11 +22,9 @@ function loadDB() {
   try {
     const data = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
     if (!data.staff) data.staff = defaultStaff();
-    if (!data.gallery) data.gallery = [];
-    if (!data.nextGalleryId) data.nextGalleryId = 1;
     return data;
   } catch {
-    return { residents: [], filings: [], nextResidentId: 1, nextFilingId: 1, staff: defaultStaff(), gallery: [], nextGalleryId: 1 };
+    return { residents: [], filings: [], nextResidentId: 1, nextFilingId: 1, staff: defaultStaff() };
   }
 }
 function defaultStaff() {
@@ -35,7 +33,8 @@ function defaultStaff() {
     developer: { name: "", photo: "" },
     administrator: { name: "", photo: "" }
   };
-}function saveDB(db) {
+}
+function saveDB(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 let db = loadDB();
@@ -134,8 +133,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/api/server", (req, res) => res.json(cachedStatus));
 
 app.get("/api/staff", (req, res) => res.json({ staff: db.staff }));
-
-app.get("/api/gallery", (req, res) => res.json({ gallery: db.gallery }));
 
 app.get("/api/me", (req, res) => {
   if (!req.session.residentId) return res.json({ loggedIn: false });
@@ -248,7 +245,9 @@ app.post("/api/admin/applications/:id", requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/api/admin/staff", requireAdmin, (req, res) => res.json({ staff: db.staff }));app.post("/api/admin/staff/:role", requireAdmin, (req, res) => {
+app.get("/api/admin/staff", requireAdmin, (req, res) => res.json({ staff: db.staff }));
+
+app.post("/api/admin/staff/:role", requireAdmin, (req, res) => {
   const role = req.params.role;
   if (!["owner", "developer", "administrator"].includes(role))
     return res.status(400).json({ error: "Invalid role." });
@@ -263,30 +262,6 @@ app.get("/api/admin/staff", requireAdmin, (req, res) => res.json({ staff: db.sta
   if (typeof photo === "string") db.staff[role].photo = photo;
   saveDB(db);
   res.json({ ok: true, staff: db.staff });
-});
-
-app.get("/api/admin/gallery", requireAdmin, (req, res) => res.json({ gallery: db.gallery }));
-
-app.post("/api/admin/gallery", requireAdmin, (req, res) => {
-  const { photo, caption } = req.body;
-  if (!photo || typeof photo !== "string" || !photo.startsWith("data:image/"))
-    return res.status(400).json({ error: "A valid image is required." });
-  if (photo.length > 5_000_000)
-    return res.status(400).json({ error: "Photo too large." });
-
-  const entry = { id: db.nextGalleryId++, photo, caption: (caption || "").trim(), createdAt: new Date().toISOString() };
-  db.gallery.unshift(entry);
-  saveDB(db);
-  res.json({ ok: true, gallery: db.gallery });
-});
-
-app.delete("/api/admin/gallery/:id", requireAdmin, (req, res) => {
-  const id = Number(req.params.id);
-  const before = db.gallery.length;
-  db.gallery = db.gallery.filter(g => g.id !== id);
-  if (db.gallery.length === before) return res.status(404).json({ error: "Photo not found." });
-  saveDB(db);
-  res.json({ ok: true, gallery: db.gallery });
 });
 
 // ---------------------------------------------------------------------------
@@ -305,4 +280,4 @@ app.listen(PORT, () => {
   console.log(`NEXSTON city records running on port ${PORT}`);
   console.log(`SAMP server: ${SERVER_IP}:${SERVER_PORT}`);
 });
-      
+  
