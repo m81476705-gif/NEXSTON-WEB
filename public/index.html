@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NEXSTON CITY ROLEPLAY</title>
+  <meta name="description" content="NEXSTON CITY ROLEPLAY â€” a Sri Lankan SA-MP roleplay server. Live status, whitelist applications and community info.">
+  <link rel="icon" href="/nexston-logo.png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="#home"><img src="/nexston-logo.png" alt="NEXSTON CITY ROLEPLAY Logo"></a>
+  <button class="menu" aria-label="Toggle menu" onclick="document.querySelector('nav').classList.toggle('open')">â˜°</button>
+  <nav>
+    <a href="#home">Home</a><a href="#server">Server</a><a href="#rules">Rules</a>
+    <a href="#departments">Departments</a><a href="#staff">Staff</a><a href="#updates">Updates</a>
+    <a href="#gallery">Gallery</a><a href="#whitelist">Whitelist</a>
+    <a href="#login">Login</a>
+  </nav>
+</header>
+
+<main>
+<section id="home" class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">SRI LANKA Â· SA-MP ROLEPLAY</p>
+    <h1>NEXSTON<br><span>CITY ROLEPLAY</span></h1>
+    <p>Build your story. Create your character. Own the city.</p>
+    <div class="actions"><a class="btn" href="#server">PLAY NOW</a><a class="btn ghost" href="#whitelist">WHITELIST</a></div>
+  </div>
+  <div class="status-card">
+    <div class="status-title">LIVE SERVER</div>
+    <div class="status-row"><span id="statusDot" class="dot off"></span><strong id="statusText">CHECKING...</strong></div>
+    <div class="players"><span id="players">--</span> <small>/ <span id="maxPlayers">--</span> PLAYERS</small></div>
+    <div class="server-address">51.79.254.10:7774</div>
+    <div id="checked" class="muted">Updating...</div>
+  </div>
+</section>
+
+<section id="server" class="section">
+  <p class="eyebrow">SERVER INFORMATION</p><h2>Our City</h2>
+  <div class="grid three">
+    <div class="card"><b>SERVER IP</b><span>51.79.254.10:7774</span></div>
+    <div class="card"><b>MODE</b><span>ROLEPLAY</span></div>
+    <div class="card"><b>STATUS</b><span id="serverStatus">Checking...</span></div>
+  </div>
+</section>
+
+<section id="rules" class="section">
+  <p class="eyebrow">RULEBOOK</p><h2>Server Rules</h2>
+  <div class="card">
+    <ol>
+      <li>Respect other players and staff.</li>
+      <li>Stay in character during roleplay.</li>
+      <li>No cheating, exploiting or abuse of bugs.</li>
+      <li>Follow faction and job rules.</li>
+      <li>Follow official staff instructions.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="departments" class="section">
+  <p class="eyebrow">FACTIONS</p><h2>Departments</h2>
+  <div class="grid three">
+    <div class="card big">ðŸ‘®<h3>Police Department</h3><p>Law enforcement and city protection.</p></div>
+    <div class="card big">ðŸ§‘â€âš•ï¸<h3>Medic Department</h3><p>Emergency medical services.</p></div>
+    <div class="card big">ðŸ‘¨â€ðŸ”§<h3>Mechanic Center</h3><p>Vehicle repairs and roadside service.</p></div>
+  </div>
+</section>
+
+<section id="staff" class="section">
+  <p class="eyebrow">THE TEAM</p><h2>Staff Team</h2>
+  <div class="grid three">
+    <div class="card"><h3>Owner</h3><p>Add staff member here.</p></div>
+    <div class="card"><h3>Developer</h3><p>Add staff member here.</p></div>
+    <div class="card"><h3>Administrator</h3><p>Add staff member here.</p></div>
+  </div>
+</section>
+
+<section id="updates" class="section">
+  <p class="eyebrow">NEWS</p><h2>Latest Updates</h2>
+  <div class="card"><h3>Welcome to NEXSTON</h3><p>Server announcements can be managed from the admin panel later.</p></div>
+</section>
+
+<section id="gallery" class="section">
+  <p class="eyebrow">CITY LIFE</p><h2>Gallery</h2>
+  <div class="gallery"><div>SCREENSHOT 01</div><div>SCREENSHOT 02</div><div>SCREENSHOT 03</div></div>
+</section>
+
+<section id="whitelist" class="section">
+  <p class="eyebrow">ACCESS</p><h2>Whitelist Application</h2>
+  <div class="card form-card">
+    <p id="wlHint">Login first, then submit your application.</p>
+    <form id="whitelistForm">
+      <input name="sampName" placeholder="SAMP Name" required>
+      <input name="age" type="number" min="1" placeholder="Age">
+      <input name="discord" placeholder="Discord Name / ID">
+      <textarea name="experience" placeholder="Your RP experience"></textarea>
+      <textarea name="reason" placeholder="Why do you want to join NEXSTON?" required></textarea>
+      <button class="btn">SUBMIT APPLICATION</button>
+    </form>
+    <div id="wlMsg" class="form-msg"></div>
+  </div>
+</section>
+
+<section id="login" class="section">
+  <p class="eyebrow">ACCOUNT</p><h2>Login / Register</h2>
+  <div class="auth grid two">
+    <form class="card" id="loginForm">
+      <h3>Login</h3>
+      <input name="email" type="email" placeholder="Email" required>
+      <input name="password" type="password" placeholder="Password" required>
+      <button class="btn">LOGIN</button>
+      <div id="loginMsg" class="form-msg"></div>
+    </form>
+    <form class="card" id="registerForm">
+      <h3>Create Account</h3>
+      <input name="username" placeholder="Username" required>
+      <input name="email" type="email" placeholder="Email" required>
+      <input name="password" type="password" minlength="6" placeholder="Password (6+ characters)" required>
+      <button class="btn">REGISTER</button>
+      <div id="registerMsg" class="form-msg"></div>
+    </form>
+  </div>
+  <div id="account" class="card hidden"></div>
+</section>
+</main>
+<footer>NEXSTON CITY ROLEPLAY Â· SAMP ROLEPLAY</footer>
+<script src="/app.js"></script>
+</body></html>
+  
