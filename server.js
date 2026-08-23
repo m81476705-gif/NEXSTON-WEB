@@ -11,7 +11,7 @@ app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
 const SERVER_IP = process.env.SAMP_IP || "51.79.254.10";
 const SERVER_PORT = Number(process.env.SAMP_PORT || 7774);
-const ADMIN_PASSWORD = "SOMD234";
+const ADMIN_PASSWORD = "SOMD22222";
 const SESSION_SECRET = process.env.SESSION_SECRET || "nexston-clerk-secret";
 
 // Storage: a plain JSON file. No native module needs compiling on the host,
