@@ -187,5 +187,4 @@ th{font-family:var(--mono);color:var(--muted);font-size:10px;letter-spacing:1.5p
   .dossier-body{padding:16px 6% 60px}
   .ticket-grid,.contact-sheet,.ledger-grid{grid-template-columns:1fr}
   table{min-width:720px}
-                                                              }
-                   
+}
