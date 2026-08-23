@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Restricted Records · NEXSTON CITY ROLEPLAY</title>
+<link rel="icon" href="/nexston-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700;900&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="ledger-strip" aria-hidden="true"></div>
+<header class="topbar">
+  <a class="seal" href="/">
+    <img src="/nexston-logo.png" alt="NEXSTON CITY ROLEPLAY">
+    <span class="seal-text">RESTRICTED · CITY CLERK ONLY</span>
+  </a>
+  <nav class="folder-tabs"><a href="/">Back to city</a></nav>
+</header>
+
+<main>
+  <section class="admin-wrap" id="loginView">
+    <p class="case-no">ACCESS REQUIRED</p>
+    <h2 style="font-family:var(--display);font-size:34px;margin:0 0 26px">Clerk Login</h2>
+    <form id="adminLoginForm" class="ledger-form small" style="max-width:420px">
+      <label>Admin password<input name="password" type="password" required autofocus></label>
+      <button class="stamp-btn" type="submit">LOGIN</button>
+      <p class="form-msg" id="adminLoginMsg"></p>
+    </form>
+  </section>
+
+  <section class="admin-wrap hidden" id="dashView">
+    <div class="admin-head">
+      <div>
+        <p class="case-no">WHITELIST LEDGER</p>
+        <h2 style="font-family:var(--display);font-size:34px;margin:0">Applications on File</h2>
+      </div>
+      <button class="stamp-btn outline" id="adminLogoutBtn">LOGOUT</button>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="appsTable">
+          <thead>
+            <tr>
+              <th>SAMP Name</th><th>Resident</th><th>Age</th><th>Discord</th>
+              <th>Experience</th><th>Reason</th><th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <p id="appsEmpty" class="dossier-sub hidden">No applications on file.</p>
+  </section>
+</main>
+
+<footer class="closing">
+  <span>NEXSTON CITY ROLEPLAY</span><span class="dot-sep">·</span><span>Restricted Records</span>
+</footer>
+<script src="/admin.js"></script>
+</body>
+</html>
