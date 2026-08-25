@@ -1,170 +1,140 @@
-// NEXSTON CITY ROLEPLAY â€” Admin Panel logic
-// NOTE: This is a static, client-side-only site (GitHub Pages has no server/database).
-// The access code below is checked in the browser, which means anyone who reads
-// this file can find it. It is fine for a friendly staff gate, but do not rely on
-// it to protect anything truly sensitive.
+// NEXSTON CITY ROLEPLAY — front-end logic
+// Reads /data/config.json (edited via the Admin Panel) to render live status.
 
-const ACCESS_CODE = "SOMD456";
 const CONFIG_URL = "data/config.json";
-
+const LS_KEY = "nexston_live_config"; // written instantly by admin.js on this same browser
 let CONFIG = null;
 
-// ---------- LOGIN ----------
-const loginScreen = document.getElementById("login-screen");
-const dashScreen = document.getElementById("dash-screen");
-const pwInput = document.getElementById("pw");
-const loginBtn = document.getElementById("login-btn");
-const loginError = document.getElementById("login-error");
-
-function showDashboard() {
-  loginScreen.style.display = "none";
-  dashScreen.classList.add("active");
-  loadConfig();
-}
-
-function tryLogin() {
-  if (pwInput.value === ACCESS_CODE) {
-    sessionStorage.setItem("nexston_admin", "1");
-    loginError.style.display = "none";
-    showDashboard();
-  } else {
-    loginError.style.display = "block";
-  }
-}
-
-loginBtn.addEventListener("click", tryLogin);
-pwInput.addEventListener("keydown", (e) => { if (e.key === "Enter") tryLogin(); });
-
-if (sessionStorage.getItem("nexston_admin") === "1") {
-  showDashboard();
-}
-
-document.getElementById("logout-btn").addEventListener("click", () => {
-  sessionStorage.removeItem("nexston_admin");
-  location.reload();
-});
-
-// ---------- TABS ----------
-document.querySelectorAll(".tab-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById(btn.dataset.tab).classList.add("active");
-  });
-});
-
-// ---------- LOAD CONFIG ----------
 async function loadConfig() {
+  let fileConfig = null;
+  let localConfig = null;
+
   try {
     const res = await fetch(CONFIG_URL + "?t=" + Date.now());
-    CONFIG = await res.json();
+    fileConfig = await res.json();
   } catch (e) {
-    CONFIG = {
+    // config.json couldn't be fetched (e.g. opened as a local file:// page)
+  }
+
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) localConfig = JSON.parse(raw);
+  } catch (e) {
+    // ignore bad/missing local override
+  }
+
+  // Whichever was updated most recently wins. This means: on the admin's own
+  // browser, flipping the toggle shows up here instantly (no re-upload needed
+  // to preview). On every other visitor's browser there is no local override,
+  // so they always see whatever is published in data/config.json.
+  if (fileConfig && localConfig) {
+    CONFIG = new Date(localConfig.lastUpdated || 0) > new Date(fileConfig.lastUpdated || 0)
+      ? localConfig
+      : fileConfig;
+  } else {
+    CONFIG = fileConfig || localConfig || {
       serverName: "NEXSTON CITY ROLEPLAY",
       serverIp: "51.79.254.10:7774",
-      serverOnline: true,
+      serverOnline: false,
       playersOnline: 0,
       maxPlayers: 150,
-      launchCountdownISO: "2050-01-01T00:00:00Z",
-      whitelist: []
+      launchCountdownISO: "2050-01-01T00:00:00Z"
     };
   }
-  populateForm();
+
+  renderStatus();
 }
 
-function populateForm() {
-  document.getElementById("status-toggle").checked = !!CONFIG.serverOnline;
-  updateStatusLabel();
-  document.getElementById("players-online").value = CONFIG.playersOnline ?? 0;
-  document.getElementById("max-players").value = CONFIG.maxPlayers ?? 150;
-
-  document.getElementById("cfg-name").value = CONFIG.serverName || "";
-  document.getElementById("cfg-ip").value = CONFIG.serverIp || "";
-  if (CONFIG.launchCountdownISO) {
-    const d = new Date(CONFIG.launchCountdownISO);
-    document.getElementById("cfg-launch").value = d.toISOString().slice(0, 16);
-  }
-
-  renderWhitelist();
-}
-
-function updateStatusLabel() {
-  const checked = document.getElementById("status-toggle").checked;
-  document.getElementById("status-label").textContent = checked ? "ONLINE ðŸŸ¢" : "OFFLINE ðŸ”´";
-}
-document.getElementById("status-toggle").addEventListener("change", updateStatusLabel);
-
-// ---------- WHITELIST ----------
-function renderWhitelist() {
-  const body = document.getElementById("wl-body");
-  const list = CONFIG.whitelist || [];
-  document.getElementById("wl-count").textContent = list.length;
-  body.innerHTML = "";
-  list.forEach((name, i) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${i + 1}</td><td>${escapeHtml(name)}</td><td><span class="remove-x" data-i="${i}">âœ•</span></td>`;
-    body.appendChild(tr);
-  });
-  body.querySelectorAll(".remove-x").forEach((el) => {
-    el.addEventListener("click", () => {
-      const idx = parseInt(el.dataset.i, 10);
-      CONFIG.whitelist.splice(idx, 1);
-      renderWhitelist();
-    });
-  });
-}
-
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-document.getElementById("wl-add-btn").addEventListener("click", () => {
-  const input = document.getElementById("wl-name");
-  const name = input.value.trim();
-  if (!name) return;
-  if (!CONFIG.whitelist) CONFIG.whitelist = [];
-  CONFIG.whitelist.push(name);
-  input.value = "";
-  renderWhitelist();
+// keep this tab in sync if the admin panel is open in another tab of the same browser
+window.addEventListener("storage", (e) => {
+  if (e.key === LS_KEY) loadConfig();
 });
 
-// ---------- SAVE / EXPORT ----------
-function collectFormIntoConfig() {
-  CONFIG.serverOnline = document.getElementById("status-toggle").checked;
-  CONFIG.playersOnline = parseInt(document.getElementById("players-online").value, 10) || 0;
-  CONFIG.maxPlayers = parseInt(document.getElementById("max-players").value, 10) || 1;
-  CONFIG.serverName = document.getElementById("cfg-name").value.trim();
-  CONFIG.serverIp = document.getElementById("cfg-ip").value.trim();
-  const launchVal = document.getElementById("cfg-launch").value;
-  if (launchVal) CONFIG.launchCountdownISO = new Date(launchVal).toISOString();
-  CONFIG.lastUpdated = new Date().toISOString();
+function renderStatus() {
+  const nameEl = document.getElementById("t-name");
+  const statusEl = document.getElementById("t-status");
+  const ipEl = document.getElementById("t-ip");
+  const playersEl = document.getElementById("t-players");
+  const ipText = document.getElementById("ip-text");
+  const footIp = document.getElementById("foot-ip");
+
+  if (nameEl) nameEl.textContent = CONFIG.serverName;
+  if (ipEl) ipEl.textContent = CONFIG.serverIp;
+  if (ipText) ipText.textContent = CONFIG.serverIp;
+  if (footIp) footIp.textContent = CONFIG.serverIp;
+  if (playersEl) playersEl.textContent = `${CONFIG.playersOnline} / ${CONFIG.maxPlayers}`;
+
+  if (statusEl) {
+    if (CONFIG.serverOnline) {
+      statusEl.className = "status-pill mono on";
+      statusEl.innerHTML = `<span class="sdot"></span> ONLINE`;
+    } else {
+      statusEl.className = "status-pill mono off";
+      statusEl.innerHTML = `<span class="sdot"></span> OFFLINE`;
+    }
+  }
 }
 
-function exportConfig() {
-  collectFormIntoConfig();
-  const blob = new Blob([JSON.stringify(CONFIG, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "config.json";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  showToast("Exported config.json âœ… â€” upload it to /data/ on GitHub to go live");
+// live Sri Lanka clock in the terminal
+function tickClock() {
+  const el = document.getElementById("t-clock");
+  if (!el) return;
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Colombo",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+  }).format(now);
+  el.textContent = fmt + " LK";
 }
+setInterval(tickClock, 1000);
+tickClock();
 
-document.getElementById("save-status-btn").addEventListener("click", exportConfig);
-document.getElementById("save-wl-btn").addEventListener("click", exportConfig);
-document.getElementById("save-config-btn").addEventListener("click", exportConfig);
+// countdown to launchCountdownISO
+function tickCountdown() {
+  if (!CONFIG || !CONFIG.launchCountdownISO) return;
+  const target = new Date(CONFIG.launchCountdownISO).getTime();
+  const now = Date.now();
+  let diff = Math.max(0, target - now);
+
+  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const m = Math.floor((diff / (1000 * 60)) % 60);
+  const s = Math.floor((diff / 1000) % 60);
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const dEl = document.getElementById("cd-days");
+  const hEl = document.getElementById("cd-hours");
+  const mEl = document.getElementById("cd-mins");
+  const sEl = document.getElementById("cd-secs");
+  if (dEl) dEl.textContent = pad(d);
+  if (hEl) hEl.textContent = pad(h);
+  if (mEl) mEl.textContent = pad(m);
+  if (sEl) sEl.textContent = pad(s);
+}
+setInterval(tickCountdown, 1000);
+
+// copy IP button
+document.addEventListener("DOMContentLoaded", () => {
+  const copyBtn = document.getElementById("copy-btn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(CONFIG ? CONFIG.serverIp : "51.79.254.10:7774");
+        showToast("IP copied ✅");
+      } catch (e) {
+        showToast("Copy failed — select manually");
+      }
+    });
+  }
+});
 
 function showToast(msg) {
   const t = document.getElementById("toast");
+  if (!t) return;
   t.textContent = msg;
   t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 3200);
-  }
-      
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+loadConfig();
+  
