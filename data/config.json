@@ -1,0 +1,12 @@
+{
+  "serverName": "NEXSTON CITY ROLEPLAY",
+  "serverIp": "51.79.254.10:7774",
+  "serverOnline": true,
+  "playersOnline": 0,
+  "maxPlayers": 150,
+  "launchCountdownISO": "2050-01-01T00:00:00Z",
+  "whitelist": [
+    "Example_Player"
+  ],
+  "lastUpdated": "2026-08-25T00:00:00Z"
+}
