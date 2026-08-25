@@ -222,6 +222,43 @@ code{font-family:var(--font-mono);}
   .stat:nth-child(odd){border-right:none;}
 }
 
+/* ===== Live roster ===== */
+.roster{
+  max-width:640px;margin:14px auto 0;text-align:left;
+  background:linear-gradient(180deg, rgba(21,25,35,.92), rgba(13,16,23,.92));
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.roster-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid var(--panel-line);
+  background:rgba(255,255,255,.02);
+}
+.roster-title{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--text-muted);
+}
+.roster-count{font-family:var(--font-mono);font-size:12px;color:var(--amber);}
+.roster-list{
+  list-style:none;margin:0;padding:8px;
+  max-height:220px;overflow-y:auto;
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;
+}
+.roster-list li{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px 12px;border-radius:6px;font-size:13px;
+  background:rgba(255,255,255,.02);
+}
+.roster-list li .p-name{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.roster-list li .p-score{font-family:var(--font-mono);font-size:11px;color:var(--steel);flex:none;}
+.roster-empty{
+  grid-column:1 / -1;text-align:center;padding:20px;
+  color:var(--text-muted);font-size:13px;
+}
+@media (max-width:520px){
+  .roster-list{grid-template-columns:1fr;}
+}
+
 /* ===== How to join ===== */
 .join{padding:100px 0 110px;background:var(--bg);}
 .section-title{

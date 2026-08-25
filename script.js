@@ -1,44 +1,46 @@
 /* =========================================================
    NEXSTON CITY ROLEPLAY — live server status
-   Data source: https://api.open.mp/servers (public, no key needed)
-   This endpoint only lists servers that are broadcasting to the
-   open.mp / SA-MP masterlist (server.cfg -> announce 1). If your
-   server isn't appearing, see the README for the fix.
+   Primary source: SAMonitor (sam.markski.ar) — does a DIRECT
+   live query to your server every time, no masterlist/announce
+   setting required. Also gives real player names.
+   Fallback source: api.open.mp/servers (masterlist based).
    ========================================================= */
 
 const SERVER_IP   = "51.79.254.10";
 const SERVER_PORT = "7774";
 const SERVER_KEY  = `${SERVER_IP}:${SERVER_PORT}`;
-const API_URL     = "https://api.open.mp/servers";
-const POLL_MS     = 30000; // 30s
+const POLL_MS     = 20000; // 20s
+
+const SAMONITOR_INFO    = `https://sam.markski.ar/api/GetServerByIP?ip_addr=${SERVER_KEY}`;
+const SAMONITOR_PLAYERS = `https://sam.markski.ar/api/GetServerPlayers?ip_addr=${SERVER_KEY}`;
+const OPENMP_LIST       = "https://api.open.mp/servers";
 
 const els = {
   headerPill: document.getElementById("header-pill"),
-  headerDot: document.getElementById("header-dot"),
   headerPillText: document.getElementById("header-pill-text"),
   statStatus: document.getElementById("stat-status"),
-  statusDot: document.getElementById("status-dot"),
   statPlayers: document.getElementById("stat-players"),
   statGamemode: document.getElementById("stat-gamemode"),
   statHostname: document.getElementById("stat-hostname"),
   lastChecked: document.getElementById("last-checked"),
   copyBtn: document.getElementById("copy-btn"),
-  ipCode: document.getElementById("ip-code"),
   year: document.getElementById("year"),
+  rosterList: document.getElementById("roster-list"),
+  rosterCount: document.getElementById("roster-count"),
 };
 
-function setOnline(server) {
+function setOnline({ pc, pm, gm, hn }) {
   els.headerPill.classList.remove("is-offline");
   els.headerPill.classList.add("is-online");
-  els.headerPillText.textContent = `LIVE · ${server.pc}/${server.pm}`;
+  els.headerPillText.textContent = `LIVE · ${pc}/${pm}`;
 
   els.statStatus.classList.remove("offline");
   els.statStatus.classList.add("online");
   els.statStatus.innerHTML = `<span class="dot" id="status-dot"></span> ONLINE`;
 
-  els.statPlayers.textContent = `${server.pc} / ${server.pm}`;
-  els.statGamemode.textContent = server.gm || "—";
-  els.statHostname.textContent = server.hn || "NEXSTON CITY ROLEPLAY";
+  els.statPlayers.textContent = `${pc} / ${pm}`;
+  els.statGamemode.textContent = gm || "—";
+  els.statHostname.textContent = hn || "NEXSTON CITY ROLEPLAY";
 }
 
 function setOffline() {
@@ -53,27 +55,83 @@ function setOffline() {
   els.statPlayers.textContent = "0 / 0";
   els.statGamemode.textContent = "—";
   els.statHostname.textContent = "Server not reachable right now";
+
+  els.rosterCount.textContent = "—";
+  els.rosterList.innerHTML = `<li class="roster-empty">Server offline — no one connected</li>`;
 }
 
-function setChecking() {
-  els.headerPillText.textContent = "Checking...";
+function renderRoster(players) {
+  if (!players || players.length === 0) {
+    els.rosterCount.textContent = "0 online";
+    els.rosterList.innerHTML = `<li class="roster-empty">City is quiet right now — be the first in</li>`;
+    return;
+  }
+  els.rosterCount.textContent = `${players.length} online`;
+  els.rosterList.innerHTML = players
+    .map(
+      (p) =>
+        `<li><span class="p-name">${escapeHtml(p.name)}</span><span class="p-score">score ${p.score}</span></li>`
+    )
+    .join("");
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---- Primary: SAMonitor direct live query ---- */
+async function trySAMonitor() {
+  const res = await fetch(SAMONITOR_INFO, { cache: "no-store" });
+  if (!res.ok) throw new Error("samonitor bad response");
+  const data = await res.json();
+  if (!data.success) throw new Error("samonitor: server not reachable");
+
+  setOnline({
+    pc: data.playersOnline,
+    pm: data.maxPlayers,
+    gm: data.gameMode,
+    hn: data.name,
+  });
+
+  try {
+    const pRes = await fetch(SAMONITOR_PLAYERS, { cache: "no-store" });
+    const players = pRes.ok ? await pRes.json() : [];
+    renderRoster(players);
+  } catch {
+    els.rosterCount.textContent = "—";
+    els.rosterList.innerHTML = `<li class="roster-empty">Player list temporarily unavailable</li>`;
+  }
+  return true;
+}
+
+/* ---- Fallback: open.mp masterlist ---- */
+async function tryOpenMp() {
+  const res = await fetch(OPENMP_LIST, { cache: "no-store" });
+  if (!res.ok) throw new Error("open.mp bad response");
+  const servers = await res.json();
+  const match = servers.find((s) => s.ip === SERVER_KEY);
+  if (!match) throw new Error("open.mp: server not in masterlist");
+
+  setOnline({ pc: match.pc, pm: match.pm, gm: match.gm, hn: match.hn });
+  els.rosterCount.textContent = "—";
+  els.rosterList.innerHTML = `<li class="roster-empty">Player names unavailable from this source</li>`;
+  return true;
 }
 
 async function refreshStatus() {
-  setChecking();
+  els.headerPillText.textContent = "Checking...";
   try {
-    const res = await fetch(API_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error("bad response");
-    const servers = await res.json();
-    const match = servers.find(s => s.ip === SERVER_KEY);
-    if (match) {
-      setOnline(match);
-    } else {
+    await trySAMonitor();
+  } catch (err1) {
+    console.warn("SAMonitor check failed, trying open.mp:", err1.message);
+    try {
+      await tryOpenMp();
+    } catch (err2) {
+      console.warn("open.mp check failed too:", err2.message);
       setOffline();
     }
-  } catch (err) {
-    console.error("Status check failed:", err);
-    setOffline();
   } finally {
     const now = new Date();
     els.lastChecked.textContent = `updated ${now.toLocaleTimeString()}`;
