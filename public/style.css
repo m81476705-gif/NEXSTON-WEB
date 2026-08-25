@@ -287,6 +287,16 @@ code{font-family:var(--font-mono);}
 }
 .gallery-empty{color:var(--text-muted);font-family:var(--font-mono);font-size:13px;text-align:center;grid-column:1/-1;}
 
+.music-toggle{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  width:64px;height:64px;border-radius:50%;border:2px solid rgba(242,169,59,.5);
+  background:var(--panel);color:var(--text);font-size:28px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 20px rgba(0,0,0,.5);transition:transform .15s ease;
+}
+.music-toggle:hover{transform:scale(1.08);}
+.music-toggle.muted{opacity:.7;}
+
 .steps{
   list-style:none;margin:0;padding:0;
   display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
