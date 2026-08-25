@@ -1,0 +1,12 @@
+{
+  "name": "nexston-city-rp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NEXSTON CITY ROLEPLAY — SA:MP Sri Lanka site with a live server status + player roster fetched by a direct UDP query to the game server.",
+  "main": "server.js",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
