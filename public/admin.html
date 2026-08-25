@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel | NEXSTON CITY ROLEPLAY</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%2310131a%22/><text x=%2250%22 y=%2268%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22%23f2a93b%22 font-family=%22Arial%22>N</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .admin-wrap{max-width:720px;margin:0 auto;padding:60px 20px 100px}
+  .admin-card{background:var(--panel,#161a24);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:28px}
+  .admin-card + .admin-card{margin-top:24px}
+  .admin-title{font-family:"Anton",sans-serif;letter-spacing:.5px;font-size:28px;margin:0 0 18px;color:#fff}
+  .admin-field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+  .admin-field label{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:1px;color:#9aa1b0;text-transform:uppercase}
+  .admin-field input[type="password"],
+  .admin-field input[type="text"],
+  .admin-field input[type="file"]{
+    background:#0d0f16;border:1px solid rgba(255,255,255,.12);border-radius:8px;
+    padding:12px 14px;color:#fff;font-family:"Work Sans",sans-serif;font-size:14px;
+  }
+  .admin-btn{
+    background:#f2a93b;color:#1a1408;border:none;border-radius:8px;padding:12px 20px;
+    font-family:"Space Mono",monospace;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:13px;text-transform:uppercase;
+  }
+  .admin-btn.danger{background:#e5484d;color:#fff}
+  .admin-btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff}
+  .admin-msg{font-family:"Space Mono",monospace;font-size:12px;margin-top:10px;color:#9aa1b0}
+  .admin-msg.error{color:#e5484d}
+  .poster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:18px}
+  .poster-item{position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#0d0f16}
+  .poster-item img{width:100%;height:120px;object-fit:cover;display:block}
+  .poster-caption{font-size:11px;color:#9aa1b0;padding:6px 8px;font-family:"Space Mono",monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .poster-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:14px;line-height:1}
+  .hidden{display:none !important}
+  .top-link{display:inline-block;margin-bottom:20px;color:#9aa1b0;font-family:"Space Mono",monospace;font-size:12px;text-decoration:none}
+</style>
+</head>
+<body style="background:#0a0c12;min-height:100vh">
+
+<div class="admin-wrap">
+  <a href="/" class="top-link">← Website එකට ආපහු</a>
+
+  <div id="loginView" class="admin-card">
+    <h1 class="admin-title">🔑 Admin Login</h1>
+    <form id="loginForm">
+      <div class="admin-field">
+        <label>Password</label>
+        <input type="password" name="password" required autocomplete="current-password">
+      </div>
+      <button class="admin-btn" type="submit">Login</button>
+      <p class="admin-msg" id="loginMsg"></p>
+    </form>
+  </div>
+
+  <div id="panelView" class="hidden">
+    <div class="admin-card">
+      <h1 class="admin-title">🏙️ Poster Manager</h1>
+      <p style="color:#9aa1b0;font-size:13px;margin:0 0 18px">
+        Home page එකේ screenshot/poster section එකට රූප add කරන්න.
+      </p>
+      <form id="uploadForm">
+        <div class="admin-field">
+          <label>Screenshot / Poster</label>
+          <input type="file" name="poster" accept="image/*" required>
+        </div>
+        <div class="admin-field">
+          <label>Caption (optional)</label>
+          <input type="text" name="caption" placeholder="e.g. Downtown at night">
+        </div>
+        <button class="admin-btn" type="submit">Upload</button>
+        <p class="admin-msg" id="uploadMsg"></p>
+      </form>
+    </div>
+
+    <div class="admin-card">
+      <h2 class="admin-title" style="font-size:20px">Current posters</h2>
+      <div class="poster-grid" id="posterGrid"></div>
+    </div>
+
+    <div class="admin-card">
+      <button class="admin-btn ghost" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

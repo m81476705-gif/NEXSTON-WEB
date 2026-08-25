@@ -108,6 +108,32 @@ async function refreshStatus() {
 refreshStatus();
 setInterval(refreshStatus, POLL_MS);
 
+/* ---- screenshot / poster gallery ---- */
+async function loadGallery() {
+  const grid = document.getElementById("gallery-grid");
+  if (!grid) return;
+  try {
+    const res = await fetch("/api/posters", { cache: "no-store" });
+    const { posters } = await res.json();
+    if (!posters || posters.length === 0) {
+      grid.innerHTML = `<p class="gallery-empty">තවම screenshots දාලා නෑ — ඉක්මනින් එකතු වෙනවා!</p>`;
+      return;
+    }
+    grid.innerHTML = posters
+      .map(
+        (p) => `
+        <div class="gallery-item">
+          <img src="${p.url}" alt="${escapeHtml(p.caption || "screenshot")}" loading="lazy">
+          ${p.caption ? `<div class="gallery-caption">${escapeHtml(p.caption)}</div>` : ""}
+        </div>`
+      )
+      .join("");
+  } catch {
+    grid.innerHTML = `<p class="gallery-empty">Screenshots load කරගන්න බැරි උනා.</p>`;
+  }
+}
+loadGallery();
+
 /* ---- copy IP button ---- */
 els.copyBtn.addEventListener("click", async () => {
   try {
