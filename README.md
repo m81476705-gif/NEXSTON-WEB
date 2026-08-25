@@ -1,34 +1,57 @@
 # NEXSTON CITY ROLEPLAY — Website
 
-A 2050 AI/cyberpunk themed website for the **NEXSTON CITY ROLEPLAY** SA-MP server.
+GitHub Pages එකේ දාන්න simple, static SA:MP roleplay website එකක්. Live server status
+(ONLINE/OFFLINE + players online) automatic-ව update වෙනවා.
 
-## What's inside
+## 📁 මොනවද තියෙන්නේ
 ```
-index.html          → public homepage (hero, live status terminal, countdown, features, join)
-admin.html           → staff admin panel (login-gated)
-assets/style.css     → shared design system
-assets/main.js       → homepage logic (clock, countdown, status)
-assets/admin.js      → admin panel logic (login, whitelist, status toggle)
-data/config.json     → the single source of truth the site reads (status, IP, whitelist, countdown date)
+index.html   → page structure
+style.css    → design (dark city theme)
+script.js    → live status logic
 ```
 
-## Deploying on GitHub Pages
-1. Create a new GitHub repo (e.g. `nexston-city`).
-2. Upload **all files, keeping the folder structure** (`assets/` and `data/` must stay as folders).
-3. Go to **Settings → Pages → Deploy from branch**, pick `main` and `/root`, save.
-4. Your site will be live at `https://<your-username>.github.io/nexston-city/`.
+## 🚀 GitHub Pages එකට දාන්නේ කොහොමද
 
-## Admin panel
-- URL: `yoursite.com/admin.html`
-- Access code: `SOMD456`
-- Tabs: **Server Status** (online/offline toggle + player count), **Whitelist** (add/remove names), **Site Config** (server name, IP, countdown date).
+1. GitHub එකේ අලුත් repo එකක් හදන්න (උදා: `nexston-city-rp`)
+2. මේ files 3 (`index.html`, `style.css`, `script.js`) repo එකේ root එකට upload කරන්න
+3. Repo → **Settings → Pages** → Source: `main` branch, `/ (root)` → **Save**
+4. විනාඩි කීපයකින් `https://<ඔයාගෙ-username>.github.io/nexston-city-rp/` වලින් site එක ලයිව් වෙනවා
 
-## ⚠️ Important limitation: live server status
-SA-MP servers talk over a **UDP query protocol**, which a plain, static site hosted on GitHub Pages **cannot reach directly** — browsers can't open raw UDP sockets, and GitHub Pages has no backend to do it for you. So real automatic "is the server up right now" detection isn't possible with files alone.
+## ⚠️ VERY IMPORTANT — Live status වැඩ කරන්න මේක කරන්න ඕන
 
-What this site does instead: the homepage reads its status from `data/config.json`. In the admin panel you flip the **ONLINE/OFFLINE** switch, hit **Save & Export**, and it downloads an updated `config.json` — you then re-upload that one file to the `data/` folder in your GitHub repo (overwrite the old one) and every visitor sees the new status. It's a one-file manual update, not fully automatic.
+Website එක player count ගන්නේ **api.open.mp/servers** කියන public list එකෙන් (SA:MP/open.mp
+servers list කරන official service එක). ඒ list එකේ ඔයාගෙ server එක නැත්නම්, website එකේ
+හැමවෙලේම **OFFLINE** විදිහට පෙන්නාවි — server එක ඇත්තටම online වුනත්.
 
-If you want *true* automatic live status later, you'd need a small backend (a cheap Node.js/PHP host or a serverless function) that actually queries the SA-MP server's UDP port and returns JSON — then `main.js` would fetch from that instead of the local `config.json`. Happy to help build that step if/when you get server hosting for it.
+Server එක list එකේ පේන්න, ඔයාගෙ `server.cfg` file එකේ මේවා check කරන්න:
 
-## Security note on the admin password
-Because this is a static site with no server, the access code lives in `assets/admin.js` in plain text — anyone who views the page source can find it. It works fine for keeping casual visitors out of the panel, but don't use it to gate anything you can't afford to have leaked (e.g. don't put real player passwords, ban evidence, etc. in `config.json`).
+```
+announce 1
+```
+(comment වෙලා (`#` හෝ `//` දාලා) නැති බව confirm කරගන්න)
+
+Save කරලා server එක restart කරලා විනාඩි 10-15ක් ඉන්න, එතකොට check කරන්න:
+```
+https://api.open.mp/servers
+```
+ඒකේ `"ip":"51.79.254.10:7774"` කියලා ඔයාගෙ server එක තියෙනවද බලන්න (Ctrl+F එකෙන් search කරන්න).
+තිබ්බනම් website එකේ status එක automatic-ව update වෙනවා.
+
+## 🧑‍🤝‍🧑 Player නම් list එකක් (roster) ගැන — Limitation එකක්
+
+මේ static website එකට **player count** (`42/100` වගේ) සහ ONLINE/OFFLINE status එක accurate-ව
+පෙන්නන්න පුළුවන් — ඒත් server එක ඇතුලේ මේ මොහොතේ **play කරන කට්ටියගෙ නම් list එකක්**
+(player names) පෙන්නන්න SA:MP protocol එකට UDP query එකක් යවන්න ඕන, ඒක browser එකකින්
+කරන්න බැහැ (security restriction එකක්, static GitHub Pages site එකකින් කරන්න බැරි දෙයක්).
+
+ඒක ඕන නම් පස්සේ step එකක් විදිහට කරන්න පුළුවන්:
+- Free serverless function එකක් (Cloudflare Workers / Vercel Functions) හදලා, ඒකෙන් server එකට
+  UDP query එකක් යවලා player list එක JSON විදිහට return කරන්න, website එක ඒක fetch කරන්න.
+- මම ඒක හදන්න උදව් කරන්නම්, ඔයාට ඕන නම් කියන්න.
+
+## ✏️ වෙනස් කරන්න ඕන දේවල්
+
+- **Server IP/Port වෙනස් වුනොත්**: `script.js` එකේ `SERVER_IP` සහ `SERVER_PORT` වෙනස් කරන්න,
+  සහ `index.html` එකේ `samp://...` links + `51.79.254.10:7774` හැම තැනකම වෙනස් කරන්න.
+- **Discord link**: `index.html` එකේ `discord.gg/PGPsDgkps` හැම තැනකම වෙනස් කරන්න.
+- **Colors/fonts**: `style.css` එකේ top එකේ `:root { ... }` කියන තැනින් වෙනස් කරන්න.
