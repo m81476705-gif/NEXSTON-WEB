@@ -2,15 +2,37 @@
 // Reads /data/config.json (edited via the Admin Panel) to render live status.
 
 const CONFIG_URL = "data/config.json";
+const LS_KEY = "nexston_live_config"; // written instantly by admin.js on this same browser
 let CONFIG = null;
 
 async function loadConfig() {
+  let fileConfig = null;
+  let localConfig = null;
+
   try {
     const res = await fetch(CONFIG_URL + "?t=" + Date.now());
-    CONFIG = await res.json();
+    fileConfig = await res.json();
   } catch (e) {
-    // fallback if config.json can't be fetched (e.g. opened as a local file:// page)
-    CONFIG = {
+    // config.json couldn't be fetched (e.g. opened as a local file:// page)
+  }
+
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) localConfig = JSON.parse(raw);
+  } catch (e) {
+    // ignore bad/missing local override
+  }
+
+  // Whichever was updated most recently wins. This means: on the admin's own
+  // browser, flipping the toggle shows up here instantly (no re-upload needed
+  // to preview). On every other visitor's browser there is no local override,
+  // so they always see whatever is published in data/config.json.
+  if (fileConfig && localConfig) {
+    CONFIG = new Date(localConfig.lastUpdated || 0) > new Date(fileConfig.lastUpdated || 0)
+      ? localConfig
+      : fileConfig;
+  } else {
+    CONFIG = fileConfig || localConfig || {
       serverName: "NEXSTON CITY ROLEPLAY",
       serverIp: "51.79.254.10:7774",
       serverOnline: false,
@@ -19,8 +41,14 @@ async function loadConfig() {
       launchCountdownISO: "2050-01-01T00:00:00Z"
     };
   }
+
   renderStatus();
 }
+
+// keep this tab in sync if the admin panel is open in another tab of the same browser
+window.addEventListener("storage", (e) => {
+  if (e.key === LS_KEY) loadConfig();
+});
 
 function renderStatus() {
   const nameEl = document.getElementById("t-name");
