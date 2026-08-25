@@ -1,12 +1,53 @@
 const express = require("express");
+const session = require("express-session");
+const multer = require("multer");
 const dgram = require("dgram");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
+app.set("trust proxy", 1);
 
 const PORT = process.env.PORT || 3000;
 const SERVER_IP = process.env.SAMP_IP || "51.79.254.10";
 const SERVER_PORT = Number(process.env.SAMP_PORT || 7774);
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "SOMD456H";
+const SESSION_SECRET = process.env.SESSION_SECRET || "nexston-admin-secret";
+
+// ---------------------------------------------------------------------------
+// Poster storage — uploaded files go to public/uploads, metadata to a
+// small JSON file. Simple and dependency-free; fine for a handful of
+// screenshots. NOTE: on hosts with an ephemeral filesystem (e.g. Railway
+// without a mounted volume), uploaded files can be wiped on redeploy —
+// attach a persistent volume at /data if you need them to survive that.
+// ---------------------------------------------------------------------------
+const UPLOAD_DIR = path.join(__dirname, "public", "uploads");
+const POSTERS_FILE = path.join(__dirname, "posters.json");
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+function loadPosters() {
+  try { return JSON.parse(fs.readFileSync(POSTERS_FILE, "utf8")); }
+  catch { return []; }
+}
+function savePosters(list) {
+  fs.writeFileSync(POSTERS_FILE, JSON.stringify(list, null, 2));
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `poster-${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
+  fileFilter: (req, file, cb) => {
+    const ok = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.mimetype);
+    cb(ok ? null : new Error("Only image files are allowed."), ok);
+  },
+});
 
 // ---------------------------------------------------------------------------
 // SA-MP server query — talks to the game server directly over UDP.
@@ -142,10 +183,89 @@ refreshStatus();
 setInterval(refreshStatus, 10000);
 
 // ---------------------------------------------------------------------------
+app.use(express.json({ limit: "1mb" }));
+app.use(session({
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, sameSite: "lax", secure: false, maxAge: 1000 * 60 * 60 * 24 * 7 },
+}));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/api/server", (req, res) => res.json(cachedStatus));
 app.get("/api/players", (req, res) => res.json({ players: cachedPlayers }));
+
+// ---------------------------------------------------------------------------
+// Public: poster gallery
+// ---------------------------------------------------------------------------
+app.get("/api/posters", (req, res) => {
+  const posters = loadPosters()
+    .slice()
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+  res.json({ posters });
+});
+
+// ---------------------------------------------------------------------------
+// Admin auth
+// ---------------------------------------------------------------------------
+function requireAdmin(req, res, next) {
+  if (!req.session.isAdmin) return res.status(401).json({ error: "Not logged in." });
+  next();
+}
+
+app.post("/api/admin/login", (req, res) => {
+  const { password } = req.body || {};
+  if (password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect password." });
+  req.session.isAdmin = true;
+  res.json({ ok: true });
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  req.session.isAdmin = false;
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/me", (req, res) => {
+  res.json({ isAdmin: Boolean(req.session.isAdmin) });
+});
+
+// ---------------------------------------------------------------------------
+// Admin: manage posters
+// ---------------------------------------------------------------------------
+app.post("/api/admin/posters", requireAdmin, (req, res) => {
+  upload.single("poster")(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: "No file uploaded." });
+
+    const posters = loadPosters();
+    const entry = {
+      id: Date.now().toString(36) + Math.round(Math.random() * 1e4).toString(36),
+      filename: req.file.filename,
+      url: `/uploads/${req.file.filename}`,
+      caption: (req.body.caption || "").trim(),
+      uploadedAt: new Date().toISOString(),
+    };
+    posters.push(entry);
+    savePosters(posters);
+    res.json({ ok: true, poster: entry });
+  });
+});
+
+app.delete("/api/admin/posters/:id", requireAdmin, (req, res) => {
+  const posters = loadPosters();
+  const entry = posters.find((p) => p.id === req.params.id);
+  if (!entry) return res.status(404).json({ error: "Not found." });
+
+  const filePath = path.join(UPLOAD_DIR, entry.filename);
+  fs.unlink(filePath, () => {}); // best-effort; ignore if already gone
+
+  savePosters(posters.filter((p) => p.id !== req.params.id));
+  res.json({ ok: true });
+});
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
